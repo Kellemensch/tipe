@@ -29,6 +29,6 @@ fig, ax = plt.subplots(figsize=(10, 10))
 france.plot(ax=ax, alpha=0.4, color='grey')
 
 # # Plot les points de coordonnées sur la carte
-geo_df.plot(ax=ax, markersize=10, color='red', marker='o')
+geo_df.plot(ax=ax, markersize=100, color='red', marker='o')
 
 plt.show()

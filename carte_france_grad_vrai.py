@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from shapely.geometry import Point	
-from code3 import pluie_annuelle, frequence_pluie, temperature_moyenne
+from code3 import pluie_annuelle, frequence_pluie, temperature_moyenne, temperature_mois_annee
 import mplcursors
 
 #ouverture du fichier shapefile
@@ -11,7 +11,7 @@ france = gpd.read_file(r'C:/Users/Baptiste/Documents/Prepa/1.MPI/TIPE/regions_20
 
 #ouverture des données meteo
 data = pd.read_csv("C:/Users/Baptiste/Documents/Prepa/1.MPI/TIPE/Donnéees_synopopendata_2018-2020/donnees-synop-essentielles-omm.csv", sep=';',encoding='latin-1',on_bad_lines='skip')
-colonnes = ['Date','Nom','Température','Precipitations_dans_les_24_dernieres_heures','Latitude','Longitude']
+colonnes = ['Date','Nom','Température','Precipitations_dans_les_24_dernieres_heures','Latitude','Longitude','Température (°C)']
 data = data[colonnes]
 data = data.dropna(axis=1, how='all') #efface les colonnes dans lesquelles il n'y a aucune valeur
 data = data.dropna(subset=colonnes) #efface les lignes pour lesquelles il manque une valeur
@@ -91,7 +91,6 @@ def affiche_temperature_moyenne(dataset):
 	# Créer un objet ScalarMappable pour la couleur de la carte
 	cmap = 'OrRd' # gradient de couleurs
 	vmax, vmin = max(temp_moy, key=lambda x: x[1])[1], min(temp_moy, key=lambda x: x[1])[1] # limites du gradient
-	#vmax, vmin = 300,280
 	sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
 	sm._A = [] # nécessité de redéfinir une propriété privée pour éviter un avertissement
 
@@ -104,6 +103,31 @@ def affiche_temperature_moyenne(dataset):
 	cbar.ax.set_ylabel("Température moyenne")
 
 	ax.set_title("Températures moyennes au cours des 4 ans")
+
+
+def affiche_temperature_mois_annee(dataset, mois, annee):
+	temp_moy = temperature_mois_annee(dataset,mois,annee)
+
+	temp_coords = [(Point(lon, lat), temp) for (lat, lon), temp in temp_moy]
+	geo_df_temp = gpd.GeoDataFrame(temp_coords, columns=['geometry', 'température'])
+	geo_df_temp = geo_df_temp.set_crs('EPSG:4326') #mise en forme correcte, la meme que le shapefile
+
+	# Créer un objet ScalarMappable pour la couleur de la carte
+	cmap = 'OrRd' # gradient de couleurs
+	vmax, vmin = max(temp_moy, key=lambda x: x[1])[1], min(temp_moy, key=lambda x: x[1])[1] # limites du gradient
+	sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+	sm._A = [] # nécessité de redéfinir une propriété privée pour éviter un avertissement
+
+
+	# Affichage des points avec un gradient de couleur en fonction de 'pluie_an'
+	geo_df_temp.plot(cmap=cmap, markersize=100, marker='o', ax=ax, column='température')
+
+	# Ajouter la légende et les labels
+	cbar = plt.colorbar(sm)
+	cbar.ax.set_ylabel("Température moyenne")
+	list_mois = ["Janvier","Février","Mars","Avril","Mais","Juin","Juillet","Aout","Septembre","Octobre","Novembre","Décembre"]
+	ax.set_title(f"Températures moyennes au cours de {list_mois[mois-1]} en {annee}")
+
 
 
 
@@ -120,10 +144,13 @@ fig, ax = plt.subplots(figsize=(10, 10))
 france.plot(ax=ax, alpha=0.4, color='gray')
 
 
-#appels aux résultats
-affiche_pluie_an(data)
+# Appels aux résultats
+# affiche_pluie_an(data)
 # affiche_fréquences_pluie(data)
-#affiche_temperature_moyenne(data)
+# affiche_temperature_moyenne(data)
+mois = 8
+annee = 2018
+affiche_temperature_mois_annee(data,mois,annee)
 
 #affiche tout
 plt.show()
